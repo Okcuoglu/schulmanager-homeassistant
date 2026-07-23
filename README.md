@@ -20,7 +20,7 @@ Bringt Stundenplan, Arbeiten, Hausaufgaben und Noten aus Schulmanager Online dir
 
 ### Über HACS (empfohlen)
 1. HACS öffnen → Integrationen → ⋮ (Menü) → Benutzerdefinierte Repositories
-2. Repository hinzufügen: `https://github.com/<dein-username>/<dein-repo>`
+2. Repository hinzufügen: `https://github.com/Okcuoglu/schulmanager-homeassistant`
 3. Kategorie: Integration
 4. "Schulmanager Online" suchen und installieren
 5. Home Assistant neu starten
@@ -197,13 +197,21 @@ A: Automatisch alle 5 Minuten. Manuelle Updates sind mit einstellbarem Cooldown 
 ### Logs prüfen
 Einstellungen → System → Logs → Nach "schulmanager" filtern
 
-## 🤝 Beitragen
-
-Issues und Pull Requests sind willkommen: https://github.com/MrIcemanLE/Schulmanager-homeassistant
-
 ## 📄 Lizenz
 
 MIT License – siehe [LICENSE](LICENSE)
+
+```
+Copyright (c) 2025 Schulmanager Home Assistant Integration (MrIcemanLE)
+Copyright (c) 2026 Okcuoglu (Ergänzungen in diesem Fork, u.a. Elternbriefe-Sensor)
+```
+
+Der komplette, unveränderte Original-Lizenztext liegt in [LICENSE](LICENSE). Dieser Fork übernimmt ihn wie von der MIT-Lizenz gefordert vollständig und unverändert.
+
+## 🤝 Beitragen
+
+- Issues/PRs zu **diesem Fork** (z.B. zur Elternbriefe-Funktion): https://github.com/Okcuoglu/schulmanager-homeassistant/issues
+- Issues/PRs zum **Original-Projekt**: https://github.com/MrIcemanLE/Schulmanager-homeassistant/issues
 
 ---
 
