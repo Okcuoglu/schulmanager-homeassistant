@@ -18,6 +18,9 @@
       "schedule_changes": {
         "name": "Schedule changes"
       },
+      "letters": {
+        "name": "Parent letters"
+      },
       "grades_overall": {
         "name": "Grades overall"
       },

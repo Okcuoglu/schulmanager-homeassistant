@@ -24,6 +24,7 @@ from .const import (
     OPT_ENABLE_EXAMS,
     OPT_ENABLE_GRADES,
     OPT_ENABLE_HOMEWORK,
+    OPT_ENABLE_LETTERS,
     OPT_ENABLE_SCHEDULE,
     VERSION,
 )
@@ -102,6 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     enable_schedule = bool(options.get(OPT_ENABLE_SCHEDULE, True))
     enable_exams = bool(options.get(OPT_ENABLE_EXAMS, True))
     enable_grades = bool(options.get(OPT_ENABLE_GRADES, True))
+    enable_letters = bool(options.get(OPT_ENABLE_LETTERS, True))
 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
@@ -185,7 +187,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     platforms_to_load = []
 
     # Load sensors when any sensor-producing feature is enabled
-    if enable_schedule or enable_exams or enable_grades:
+    if enable_schedule or enable_exams or enable_grades or enable_letters:
         platforms_to_load.append(Platform.SENSOR)
 
     if enable_homework:
@@ -222,11 +224,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     enable_schedule = bool(options.get(OPT_ENABLE_SCHEDULE, True))
     enable_exams = bool(options.get(OPT_ENABLE_EXAMS, True))
     enable_grades = bool(options.get(OPT_ENABLE_GRADES, True))
+    enable_letters = bool(options.get(OPT_ENABLE_LETTERS, True))
 
     platforms_to_unload = []
 
     # Unload sensors if any of their contributing features were enabled
-    if enable_schedule or enable_exams or enable_grades:
+    if enable_schedule or enable_exams or enable_grades or enable_letters:
         platforms_to_unload.append(Platform.SENSOR)
 
     if enable_homework:

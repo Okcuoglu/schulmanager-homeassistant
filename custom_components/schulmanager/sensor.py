@@ -119,6 +119,9 @@ async def async_setup_entry(
         # Add Wochenplan JSON sensor (for Stundenplan Card integration)
         entities.append(WochenplanJsonSensor(client, coord, sid, name, slug))
 
+        # Add parent letters (Elternbriefe) sensor
+        entities.append(LettersSensor(client, coord, sid, name, slug))
+
     async_add_entities(entities)
 
 
@@ -812,6 +815,91 @@ class ScheduleChangesSensor(CoordinatorEntity[SchulmanagerCoordinator], SensorEn
         return {
             "changes": changes,
             "llm_structured_data": llm_data,
+            "last_updated": datetime.now().isoformat(),
+        }
+
+
+class LettersSensor(CoordinatorEntity[SchulmanagerCoordinator], SensorEntity):
+    """Sensor entity for parent letters (Elternbriefe)."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        client: Any,
+        coordinator: SchulmanagerCoordinator,
+        student_id: str,
+        student_name: str,
+        slug: str,
+    ) -> None:
+        """Initialize the letters sensor."""
+        super().__init__(coordinator)
+        self.client = client
+        self.student_id = student_id
+        self.student_name = student_name
+        self._attr_unique_id = f"schulmanager_{self.student_id}_letters"
+        self._attr_translation_key = "letters"
+        self._attr_icon = "mdi:email-outline"
+        self._attr_name = "Elternbriefe"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"student_{self.student_id}")},
+            name=self.student_name,
+            manufacturer="Schulmanager Online",
+            model="Schüler",
+            suggested_area="Schule",
+            configuration_url="https://login.schulmanager-online.de/",
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return bool(self.coordinator.last_update_success)
+
+    def _letters(self) -> list[dict[str, Any]]:
+        integ = cast(IntegrationData | None, self.coordinator.data)
+        if integ is None:
+            return []
+        return cast(list[dict[str, Any]], integ.get("letters", []) or [])
+
+    def _unread(self) -> list[dict[str, Any]]:
+        letters = self._letters()
+        try:
+            return self.client.filter_unread_letters(letters, self.student_id)
+        except Exception:  # noqa: BLE001 - be defensive, never break the sensor
+            return []
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the number of unread letters for this student."""
+        return len(self._unread())
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the letter list with title, date and read status."""
+        letters = self._letters()
+        unread_ids = {id(letter) for letter in self._unread()}
+
+        summary = [
+            {
+                "id": letter.get("id"),
+                "title": letter.get("title"),
+                # Confirmed field name from the raw API: "sentDate".
+                "date": letter.get("sentDate"),
+                "unread": id(letter) in unread_ids,
+            }
+            for letter in letters
+        ]
+        # Newest first, if a date/timestamp is present
+        summary.sort(key=lambda entry: entry.get("date") or "", reverse=True)
+
+        return {
+            "letters": summary,
+            "total_count": len(letters),
+            "unread_count": len(unread_ids),
             "last_updated": datetime.now().isoformat(),
         }
 

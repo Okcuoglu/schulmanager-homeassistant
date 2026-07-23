@@ -482,6 +482,34 @@ class SchulmanagerClient:
         await self._dump(f"hausaufgaben_{student_id}.json", data)
         return data if isinstance(data, list) else []
 
+    async def fetch_letters(self) -> list[dict]:
+        """Fetch parent letters (Elternbriefe) for the account.
+
+        Unlike homework/schedule/exams/grades, this endpoint is account-wide
+        and takes no parameters. Each returned letter has a
+        ``studentStatuses`` list of ``{"studentId": ..., "readTimestamp": ...}``
+        entries used to determine per-student read status.
+        """
+        data = await self._api_call(
+            "letters",
+            "get-letters",
+            {},
+            "letters_get-letters",
+        )
+        await self._dump("elternbriefe.json", data)
+        return data if isinstance(data, list) else []
+
+    def filter_unread_letters(self, letters: list[dict], student_id: str) -> list[dict]:
+        """Return only letters unread by the given student."""
+        sid = int(student_id)
+        unread: list[dict] = []
+        for letter in letters:
+            for status in letter.get("studentStatuses", []) or []:
+                if status.get("studentId") == sid and status.get("readTimestamp") is None:
+                    unread.append(letter)
+                    break
+        return unread
+
     async def fetch_exams(
         self, student_id: str, class_id: int | None = None, date_range_config: dict[str, int] | None = None
     ) -> list[dict]:
@@ -1492,6 +1520,7 @@ class SchulmanagerClient:
                 "schedule": True,
                 "exams": True,
                 "grades": True,
+                "letters": True,
             }
 
         result: dict[str, Any] = {
@@ -1500,7 +1529,16 @@ class SchulmanagerClient:
             "schedule": {},
             "exams": {},
             "grades": {},
+            "letters": [],
         }
+
+        # Letters are account-wide (not per student) - fetch once per client
+        if enabled_features.get("letters", True):
+            try:
+                result["letters"] = await self.fetch_letters()
+            except Exception as err:
+                _LOGGER.warning("Schulmanager: letters fetch failed: %s", err)
+                result["letters"] = []
 
         # Fetch per student only for enabled features
         for st in self._students:
@@ -1859,6 +1897,7 @@ class SchulmanagerHubClient:
             "schedule": {},
             "exams": {},
             "grades": {},
+            "letters": [],
         }
 
         if not self._clients:
@@ -1885,6 +1924,10 @@ class SchulmanagerHubClient:
             for key in ["homework", "schedule", "exams", "grades"]:
                 if key in client_result:
                     result[key].update(client_result[key])
+
+            # Letters is a flat list (account-wide), not keyed by student id
+            if "letters" in client_result:
+                result["letters"].extend(client_result["letters"])
 
         return result
 

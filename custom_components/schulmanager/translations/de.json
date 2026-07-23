@@ -18,6 +18,9 @@
       "schedule_changes": {
         "name": "Stundenplan Änderungen"
       },
+      "letters": {
+        "name": "Elternbriefe"
+      },
       "grades_overall": {
         "name": "Noten Gesamt"
       },
